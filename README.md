@@ -44,6 +44,7 @@ npm run build
 | [Android UI 还原规范](docs/android-ui-spec.md) | 设计稿到 Compose 的还原标准 |
 | [Android Studio 安装与运行指南](docs/android-studio-setup.md) | 从零搭建开发环境 |
 | [Git 流程规范](docs/git-workflow.md) | 分支策略、Conventional Commits、PR 与发布流程 |
+| [代码风格规范](docs/coding-style.md) | Kotlin/TS 代码风格、Compose 约定、包结构 |
 | [文件命名规范](docs/file-naming.md) | 文件与目录命名约定 |
 | [阶段二 UI 预览检查记录](docs/phase-2-ui-review.md) | Web 原型验收记录 |
 | [阶段三 Android 开发准备方案](docs/phase-3-android-prep.md) | Android 工程立项方案 |
@@ -62,6 +63,10 @@ npm run build
 ## 当前状态
 
 MVP 主流程（扫描 → 分组 → 手势决策 → 系统回收站 → Room 持久化）在代码层打通，推进至 Sprint 4（部分）。详细进度见 [android-app/README.md](android-app/README.md)。
+
+## 贡献
+
+欢迎参与贡献，请先阅读 [贡献指南](CONTRIBUTING.md)。
 
 ## 开源协议
 

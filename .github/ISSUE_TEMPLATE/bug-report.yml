@@ -1,0 +1,61 @@
+name: Bug 报告
+description: 报告一个可复现的缺陷，帮助改进项目
+title: "[Bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请先搜索现有 Issue 避免重复，并尽量填写完整以下信息。
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: 影响模块
+      options:
+        - Android App
+        - Web 原型
+        - CI/CD
+        - 文档
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 问题描述
+      description: 发生了什么？期望的行为是什么？
+      placeholder: "实际：……；期望：……"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 可稳定复现的最小步骤
+      placeholder: |
+        1. 进入「……」页面
+        2. 执行「……」操作
+        3. 观察「……」
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本 / 环境
+      description: App 版本（或 commit）、Android 版本 / 设备、Web 浏览器等
+      placeholder: "versionName 0.1.0 @ commit 27bbfe7；Android 13 / Pixel 7"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 截图
+      description: logcat、报错堆栈或界面截图（直接粘贴）
+      render: shell
+    validations:
+      required: false

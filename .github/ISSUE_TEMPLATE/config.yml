@@ -1,0 +1,10 @@
+# Issue 模板配置
+# 关闭空白 Issue，引导贡献者使用结构化模板或 Discussions
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 提问与讨论
+    url: https://github.com/lingxin2316/OneTake/discussions
+    about: 使用问题、想法探讨、非缺陷反馈请到 Discussions。
+  - name: 📖 项目文档
+    url: https://github.com/lingxin2316/OneTake/blob/main/docs/prd.md
+    about: 提交前请先阅读 PRD 确认功能边界与 MVP 范围。

@@ -1,0 +1,74 @@
+# Dependabot 依赖更新配置
+# 文档：https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+
+updates:
+  # GitHub Actions 工作流依赖（actions/checkout 等）
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "build(ci)"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # Android Gradle 依赖（android-app/）
+  - package-ecosystem: "gradle"
+    directory: "/android-app"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "android"
+    commit-message:
+      prefix: "build(android)"
+      include: "scope"
+    # Compose / AndroidX / Kotlin 相关库合并为一个 PR，减少噪音
+    groups:
+      androidx:
+        patterns:
+          - "androidx.*"
+      compose:
+        patterns:
+          - "androidx.compose.*"
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin.*"
+          - "org.jetbrains.kotlinx.*"
+
+  # Web 原型 npm 依赖（prototype/）
+  - package-ecosystem: "npm"
+    directory: "/prototype"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "web"
+    commit-message:
+      prefix: "build(web)"
+      include: "scope"
+    # 开发依赖与生产依赖分别成组
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      vite:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
