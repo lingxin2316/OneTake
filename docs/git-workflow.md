@@ -119,8 +119,8 @@ revert: feat(android): 新增深色主题
 - [ ] 提交信息符合 Conventional Commits
 - [ ] 本地 `./gradlew :app:assembleDebug` 通过（Android 改动）
 - [ ] 本地 `npm run typecheck && npm run build` 通过（Web 改动）
-- [ ] 已同步 `android-app/README.md` 与 `Android_开发任务清单.md`（如有任务状态变更）
-- [ ] 已同步 `PRD_相册清理工具.md`（如有功能边界/范围变更）
+- [ ] 已同步 `android-app/README.md` 与 `android-task-list.md`（如有任务状态变更）
+- [ ] 已同步 `prd.md`（如有功能边界/范围变更）
 
 ### 3.3 合入策略
 

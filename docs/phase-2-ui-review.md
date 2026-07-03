@@ -17,7 +17,7 @@
   - 首页分组列表；
   - 卡片决策页；
   - 设置页；
-- 已产出 Android UI 还原规范：`Android_UI_还原规范.md`。
+- 已产出 Android UI 还原规范：`android-ui-spec.md`。
 
 ---
 

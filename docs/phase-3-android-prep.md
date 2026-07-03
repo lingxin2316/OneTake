@@ -287,4 +287,4 @@ data class ReviewUiState(
 
 建议下一步直接开始 Sprint 1：创建真实 Android Compose 工程骨架，并先用假数据还原首页、卡片页、设置页。
 
-如果暂时不创建 Android 工程，则下一步可以先补一份 `Android_开发任务清单.md`，把 Sprint 1 到 Sprint 5 拆成可勾选任务。
+如果暂时不创建 Android 工程，则下一步可以先补一份 `android-task-list.md`，把 Sprint 1 到 Sprint 5 拆成可勾选任务。

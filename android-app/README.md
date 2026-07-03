@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-> 以下清单依据 `app/src/main/` 源码核实，与 `../docs/Android_开发任务清单.md` 中的勾选状态保持同步。
+> 以下清单依据 `app/src/main/` 源码核实，与 `../docs/android-task-list.md` 中的勾选状态保持同步。
 
 ### 已完成（代码层验证通过）
 
