@@ -1,0 +1,25 @@
+name: Commit Lint
+
+# 校验 PR 中所有提交信息是否符合 Conventional Commits 规范。
+# 规范：https://www.conventionalcommits.org/zh-hans/v1.0.0/
+# 合法示例：feat: 新增深色主题 / fix(android): 修复撤回栈越界 / docs: 同步 README
+
+on:
+  pull_request:
+    types: [opened, synchronize, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  commitlint:
+    name: Conventional Commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Lint commit messages
+        uses: wagoid/commitlint-github-action@v5

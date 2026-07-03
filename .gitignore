@@ -1,0 +1,70 @@
+# Dependencies
+node_modules/
+
+# Web build output
+dist/
+.vite/
+
+# Android build output
+android-app/.gradle/
+android-app/build/
+android-app/app/build/
+android-app/app/release/
+android-app/app/*.apk
+android-app/app/*.aab
+
+# Kotlin compiler cache
+android-app/.kotlin/
+
+# Local IDE and machine files
+.idea/
+*.iml
+android-app/local.properties
+android-app/.idea/runConfigurations/
+
+# Signing keystore (CI will generate debug keystore; never commit release keys)
+*.keystore
+*.jks
+!debug.keystore
+
+# Local AI assistant memory
+.workbuddy/
+
+# Generated binaries and diagnostics
+*.apk
+*.aab
+*.hprof
+*.pid
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# OS specific files
+Desktop.ini
+ehthumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.cache
+*.eslintcache
+*.stylelintcache
+
+# Local media accidentally saved into project root (not project assets)
+微信图片*.jpg
+微信视频*.mp4
+*.mp4
