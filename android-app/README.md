@@ -49,7 +49,6 @@
 
 ### 未完成 / 已知缺口
 
-- **设置页持久化**：`actionBarEnabled` 与 `skipDeleteTip` 当前为内存状态，未写入 Room，重启后丢失；
 - **精选集 schema 不完整**：缺 `collection_folder`、`collection_item`、`review_action` 三张表，当前用 `decision_record` 模拟精选集，不支持自定义名称/图标/封面；
 - **暂存页批量删除**：仅支持"移除（出暂存）"，不支持"批量删除（入系统回收站）"；
 - **深色主题**：`AppTheme` 仅含 `lightColorScheme`，PRD MVP 要求的浅/深双主题未实现；
@@ -96,7 +95,6 @@ npm run build
 
 ## 下一步
 
-- 补齐 Sprint 3 剩余项：设置页持久化（`UserSettings` 表）；
 - 补齐 Sprint 4：`collection_folder` / `collection_item` schema 重构；
 - 启动 Sprint 5 稳定性收尾：多宽度视觉检查、深色模式、性能测试、内测包；
 - 引入单元测试覆盖 `MediaStoreRepository` 分组逻辑与 `detectAction` 手势判定。

@@ -11,10 +11,18 @@ data class StoredDecision(
     val createdAtMillis: Long
 )
 
+data class UserSettings(
+    val actionBarEnabled: Boolean,
+    val skipDeleteTip: Boolean
+)
+
 class DecisionStore(context: Context) {
     private val database = AlbumCleanerDatabase.get(context)
     private val decisionDao = database.decisionRecordDao()
     private val stagedDao = database.stagedItemDao()
+    private val settingsDao = database.userSettingsDao()
+
+    private val defaultSettings = UserSettings(actionBarEnabled = false, skipDeleteTip = false)
 
     suspend fun add(item: MediaItem, action: ReviewActionType) {
         decisionDao.insert(
@@ -99,6 +107,30 @@ class DecisionStore(context: Context) {
 
     suspend fun clearStaged() {
         stagedDao.clear()
+    }
+
+    suspend fun getSettings(): UserSettings {
+        val entity = settingsDao.get()
+        return entity?.toUserSettings() ?: defaultSettings
+    }
+
+    suspend fun saveSettings(settings: UserSettings) {
+        settingsDao.upsert(settings.toEntity())
+    }
+
+    private fun UserSettingsEntity.toUserSettings(): UserSettings {
+        return UserSettings(
+            actionBarEnabled = actionBarEnabled,
+            skipDeleteTip = skipDeleteTip
+        )
+    }
+
+    private fun UserSettings.toEntity(): UserSettingsEntity {
+        return UserSettingsEntity(
+            id = 1,
+            actionBarEnabled = actionBarEnabled,
+            skipDeleteTip = skipDeleteTip
+        )
     }
 
     private fun DecisionRecordEntity.toStoredDecision(): StoredDecision {

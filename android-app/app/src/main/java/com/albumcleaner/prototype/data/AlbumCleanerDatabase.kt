@@ -30,6 +30,13 @@ data class StagedItemEntity(
     val createdAtMillis: Long
 )
 
+@Entity(tableName = "user_settings")
+data class UserSettingsEntity(
+    @PrimaryKey val id: Int = 1,
+    val actionBarEnabled: Boolean,
+    val skipDeleteTip: Boolean
+)
+
 @Dao
 interface DecisionRecordDao {
     @Insert
@@ -66,14 +73,24 @@ interface StagedItemDao {
     suspend fun clear()
 }
 
+@Dao
+interface UserSettingsDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: UserSettingsEntity)
+
+    @Query("SELECT * FROM user_settings WHERE id = 1")
+    suspend fun get(): UserSettingsEntity?
+}
+
 @Database(
-    entities = [DecisionRecordEntity::class, StagedItemEntity::class],
-    version = 2,
+    entities = [DecisionRecordEntity::class, StagedItemEntity::class, UserSettingsEntity::class],
+    version = 3,
     exportSchema = false
 )
 abstract class AlbumCleanerDatabase : RoomDatabase() {
     abstract fun decisionRecordDao(): DecisionRecordDao
     abstract fun stagedItemDao(): StagedItemDao
+    abstract fun userSettingsDao(): UserSettingsDao
 
     companion object {
         @Volatile

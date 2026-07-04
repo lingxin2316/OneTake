@@ -100,6 +100,7 @@ import com.albumcleaner.prototype.data.SourceType
 import com.albumcleaner.prototype.data.StagedItem
 import com.albumcleaner.prototype.data.StoredDecision
 import com.albumcleaner.prototype.data.TrashRepository
+import com.albumcleaner.prototype.data.UserSettings
 import com.albumcleaner.prototype.data.formatSize
 import com.albumcleaner.prototype.ui.theme.AlbumCleanerTheme
 import com.albumcleaner.prototype.ui.theme.AppColors
@@ -131,6 +132,7 @@ private fun AlbumCleanerApp() {
     var page by remember { mutableStateOf(AppPage.Home) }
     var status by remember { mutableStateOf(LibraryStatus.Checking) }
     var actionBarEnabled by remember { mutableStateOf(false) }
+    var skipDeleteTip by remember { mutableStateOf(false) }
     var categories by remember { mutableStateOf(FakeAlbumData.categories) }
     var activeItems by remember { mutableStateOf(FakeAlbumData.reviewItems) }
     var activeGroupTitle by remember { mutableStateOf("2026-06-20 毕业典礼") }
@@ -153,6 +155,20 @@ private fun AlbumCleanerApp() {
         val restored = withContext(Dispatchers.IO) { store.stagedItems() }
         stagedItems.clear()
         stagedItems.addAll(restored)
+    }
+
+    suspend fun loadSettings() {
+        val settings = withContext(Dispatchers.IO) { store.getSettings() }
+        actionBarEnabled = settings.actionBarEnabled
+        skipDeleteTip = settings.skipDeleteTip
+    }
+
+    fun saveSettings() {
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                store.saveSettings(UserSettings(actionBarEnabled, skipDeleteTip))
+            }
+        }
     }
 
     fun loadMedia() {
@@ -240,6 +256,7 @@ private fun AlbumCleanerApp() {
 
     LaunchedEffect(Unit) {
         refreshLocalState()
+        loadSettings()
         if (hasMediaPermission()) loadMedia() else status = LibraryStatus.NeedsPermission
     }
 
@@ -300,6 +317,11 @@ private fun AlbumCleanerApp() {
                         withContext(Dispatchers.IO) { store.removeStaged(id) }
                         refreshLocalState()
                     }
+                },
+                skipDeleteTip = skipDeleteTip,
+                onSkipDeleteTipChanged = {
+                    skipDeleteTip = it
+                    saveSettings()
                 }
             )
             AppPage.Collections -> CollectionsScreenV2(
@@ -359,7 +381,10 @@ private fun AlbumCleanerApp() {
                 status = status,
                 decisionCount = decisionCount,
                 actionBarEnabled = actionBarEnabled,
-                onToggleActionBar = { actionBarEnabled = !actionBarEnabled },
+                onToggleActionBar = {
+                    actionBarEnabled = !actionBarEnabled
+                    saveSettings()
+                },
                 onReload = { if (hasMediaPermission()) loadMedia() else permissionLauncher.launch(mediaPermission()) },
                 onClearDecisions = {
                     scope.launch {
@@ -476,25 +501,27 @@ private fun CategoryCard(category: MediaCategory, onOpenGroup: (MediaGroup) -> U
 }
 
 @Composable
-private fun ReviewScreen(
-    title: String,
-    items: List<MediaItem>,
-    actionBarEnabled: Boolean,
-    stagedItems: List<StagedItem>,
-    localDeleteSignal: Long?,
-    onLocalDeleteHandled: () -> Unit,
-    onBack: () -> Unit,
-    onNavigate: (AppPage) -> Unit,
-    onStage: (MediaItem) -> Unit,
-    onRecordDecision: (MediaItem, ReviewActionType) -> Unit,
-    onRequestTrash: (MediaItem) -> Unit,
-    onRemoveStaged: (Long) -> Unit
-) {
-    val scope = rememberCoroutineScope()
-    var index by remember(items) { mutableIntStateOf(0) }
-    val undoStack = remember { mutableStateListOf<ReviewAction>() }
-    var showDeleteTip by remember { mutableStateOf(false) }
-    var skipDeleteTip by remember { mutableStateOf(false) }
+    private fun ReviewScreen(
+        title: String,
+        items: List<MediaItem>,
+        actionBarEnabled: Boolean,
+        stagedItems: List<StagedItem>,
+        localDeleteSignal: Long?,
+        onLocalDeleteHandled: () -> Unit,
+        onBack: () -> Unit,
+        onNavigate: (AppPage) -> Unit,
+        onStage: (MediaItem) -> Unit,
+        onRecordDecision: (MediaItem, ReviewActionType) -> Unit,
+        onRequestTrash: (MediaItem) -> Unit,
+        onRemoveStaged: (Long) -> Unit,
+        skipDeleteTip: Boolean,
+        onSkipDeleteTipChanged: (Boolean) -> Unit
+    ) {
+        val scope = rememberCoroutineScope()
+        var index by remember(items) { mutableIntStateOf(0) }
+        val undoStack = remember { mutableStateListOf<ReviewAction>() }
+        var showDeleteTip by remember { mutableStateOf(false) }
+        var localSkipDeleteTip by remember { mutableStateOf(skipDeleteTip) }
     var showCollections by remember { mutableStateOf(false) }
     var toast by remember { mutableStateOf<String?>(null) }
     var dragOffsetX by remember { mutableFloatStateOf(0f) }
@@ -526,7 +553,7 @@ private fun ReviewScreen(
     }
 
     fun deleteAction() {
-        if (!skipDeleteTip) showDeleteTip = true else onRequestTrash(items[index])
+        if (!localSkipDeleteTip) showDeleteTip = true else onRequestTrash(items[index])
     }
 
     val current = items[index]
@@ -597,7 +624,10 @@ private fun ReviewScreen(
                 Column {
                     Text("确认后会调用系统回收站，撤回时会从系统回收站恢复。", color = AppColors.Muted)
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 10.dp)) {
-                        Switch(checked = skipDeleteTip, onCheckedChange = { skipDeleteTip = it })
+                        Switch(checked = localSkipDeleteTip, onCheckedChange = {
+                            localSkipDeleteTip = it
+                            onSkipDeleteTipChanged(it)
+                        })
                         Text("不再提醒", color = AppColors.Muted)
                     }
                 }
