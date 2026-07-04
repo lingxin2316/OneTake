@@ -1,8 +1,12 @@
+<!-- category: 开发指南 -->
+
 # Android UI 还原规范：相册清理工具
 
 **版本：** v0.1  
 **用途：** 指导 Android Compose 开发尽量还原当前高保真原型的视觉和组件状态。  
 **范围：** V1.0 MVP，高保真 UI 方向稿，不包含 AI、重复对比、社媒预览等后续功能。
+
+> 溯源：本规范基于 [prd.md](prd.md) 的产品需求与 [phase-2-ui-review.md](phase-2-ui-review.md) 的原型验收结果制定。
 
 ---
 

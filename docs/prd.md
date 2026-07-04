@@ -1,9 +1,13 @@
+<!-- category: 产品与需求 -->
+
 # PRD：智能手机相册清理工具
 
 **文档版本：** v1.3  
 **创建日期：** 2026-06-27  
 **最后修订：** 2026-07-03（新增 Open Issues #8 与第十一章实现偏差说明）  
 **文档状态：** 草稿
+
+> 相关文档：UI 还原规范见 [android-ui-spec.md](android-ui-spec.md)，任务级状态见 [android-task-list.md](android-task-list.md)。
 
 ---
 

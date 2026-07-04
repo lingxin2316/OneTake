@@ -37,15 +37,30 @@ npm run build
 
 ## 文档索引
 
+完整文档见 [docs/index.md](docs/index.md)，按四分类组织：
+
+### 产品与需求
 | 文档 | 说明 |
 |------|------|
 | [产品需求文档](docs/prd.md) | 功能边界、MVP 范围与 V1.0 实现偏差说明 |
-| [Android 开发任务清单](docs/android-task-list.md) | Sprint 1-5 任务三态标注 |
-| [Android UI 还原规范](docs/android-ui-spec.md) | 设计稿到 Compose 的还原标准 |
-| [Android Studio 安装与运行指南](docs/android-studio-setup.md) | 从零搭建开发环境 |
+
+### 工程规范
+| 文档 | 说明 |
+|------|------|
 | [Git 流程规范](docs/git-workflow.md) | 分支策略、Conventional Commits、PR 与发布流程 |
 | [代码风格规范](docs/coding-style.md) | Kotlin/TS 代码风格、Compose 约定、包结构 |
 | [文件命名规范](docs/file-naming.md) | 文件与目录命名约定 |
+
+### 开发指南
+| 文档 | 说明 |
+|------|------|
+| [Android 开发任务清单](docs/android-task-list.md) | Sprint 1-5 任务三态标注 |
+| [Android UI 还原规范](docs/android-ui-spec.md) | 设计稿到 Compose 的还原标准 |
+| [Android Studio 安装与运行指南](docs/android-studio-setup.md) | 从零搭建开发环境 |
+
+### 历史归档
+| 文档 | 说明 |
+|------|------|
 | [阶段二 UI 预览检查记录](docs/phase-2-ui-review.md) | Web 原型验收记录 |
 | [阶段三 Android 开发准备方案](docs/phase-3-android-prep.md) | Android 工程立项方案 |
 

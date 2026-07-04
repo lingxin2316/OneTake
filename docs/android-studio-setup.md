@@ -1,7 +1,11 @@
+<!-- category: 开发指南 -->
+
 # Android Studio 从零安装与运行指南
 
 适用环境：Windows 10 / Windows 11  
 项目目录：`D:\emmm\android-app`
+
+> 最新工程状态见 [android-app/README.md](../android-app/README.md)。
 
 ---
 

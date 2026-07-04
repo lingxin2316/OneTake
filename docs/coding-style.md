@@ -1,3 +1,5 @@
+<!-- category: 工程规范 -->
+
 # 代码风格规范
 
 > 本仓库代码风格基线。与 [.editorconfig](../.editorconfig)（格式）、[文件命名规范](file-naming.md)（命名）配套使用：前者管"长什么样"，本文档管"怎么写"。
