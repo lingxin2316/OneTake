@@ -109,6 +109,19 @@ class DecisionStore(context: Context) {
         stagedDao.clear()
     }
 
+    suspend fun recordBatchDecision(items: List<StagedItem>, action: ReviewActionType) {
+        val entities = items.map {
+            DecisionRecordEntity(
+                mediaId = it.mediaId,
+                action = action.name,
+                displayName = it.displayName,
+                uri = it.uri,
+                createdAtMillis = System.currentTimeMillis()
+            )
+        }
+        decisionDao.insertAll(entities)
+    }
+
     suspend fun getSettings(): UserSettings {
         val entity = settingsDao.get()
         return entity?.toUserSettings() ?: defaultSettings

@@ -15,6 +15,13 @@ class TrashRepository(private val context: Context) {
         return createTrashRequest(item.uri, trashed = false)
     }
 
+    fun createBatchTrashRequest(uris: List<String>, trashed: Boolean): PendingIntent? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || uris.isEmpty()) return null
+        val uriList = uris.mapNotNull { if (it.isNotBlank()) Uri.parse(it) else null }
+        if (uriList.isEmpty()) return null
+        return MediaStore.createTrashRequest(context.contentResolver, uriList, trashed)
+    }
+
     private fun createTrashRequest(uriValue: String, trashed: Boolean): PendingIntent? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || uriValue.isBlank()) return null
         val uri = Uri.parse(uriValue)

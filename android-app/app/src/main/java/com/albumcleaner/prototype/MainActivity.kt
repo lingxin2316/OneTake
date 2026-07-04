@@ -144,6 +144,7 @@ private fun AlbumCleanerApp() {
     var viewerStartIndex by remember { mutableIntStateOf(0) }
     var publishItems by remember { mutableStateOf(emptyList<StagedItem>()) }
     var pendingTrashItem by remember { mutableStateOf<MediaItem?>(null) }
+    var pendingTrashItems by remember { mutableStateOf<List<StagedItem>>(emptyList()) }
     var pendingRestoreDecision by remember { mutableStateOf<StoredDecision?>(null) }
     var localDeleteSignal by remember { mutableStateOf<Long?>(null) }
     var toast by remember { mutableStateOf<String?>(null) }
@@ -225,14 +226,29 @@ private fun AlbumCleanerApp() {
 
     val trashLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         val item = pendingTrashItem
+        val items = pendingTrashItems
         pendingTrashItem = null
-        if (result.resultCode == Activity.RESULT_OK && item != null) {
-            scope.launch {
-                withContext(Dispatchers.IO) { store.add(item, ReviewActionType.Delete) }
-                activeItems = activeItems.filterNot { it.id == item.id }.ifEmpty { FakeAlbumData.reviewItems }
-                refreshLocalState()
-                loadMedia()
-                toast = "已移入系统回收站"
+        pendingTrashItems = emptyList()
+        if (result.resultCode == Activity.RESULT_OK) {
+            if (items.isNotEmpty()) {
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        items.forEach { store.removeStaged(it.mediaId) }
+                        store.recordBatchDecision(items, ReviewActionType.Delete)
+                    }
+                    items.forEach { stagedItems.removeAll { si -> si.mediaId == it.mediaId } }
+                    refreshLocalState()
+                    loadMedia()
+                    toast = "已移入系统回收站"
+                }
+            } else if (item != null) {
+                scope.launch {
+                    withContext(Dispatchers.IO) { store.add(item, ReviewActionType.Delete) }
+                    activeItems = activeItems.filterNot { it.id == item.id }.ifEmpty { FakeAlbumData.reviewItems }
+                    refreshLocalState()
+                    loadMedia()
+                    toast = "已移入系统回收站"
+                }
             }
         } else {
             toast = "已取消删除"
@@ -338,6 +354,23 @@ private fun AlbumCleanerApp() {
                     scope.launch {
                         withContext(Dispatchers.IO) { store.addStagedToCollection(selected) }
                         refreshLocalState()
+                    }
+                },
+                onBatchDelete = { selected ->
+                    val uris = selected.map { it.uri }
+                    val request = trash.createBatchTrashRequest(uris, trashed = true)
+                    if (request == null) {
+                        scope.launch {
+                            withContext(Dispatchers.IO) {
+                                selected.forEach { store.removeStaged(it.mediaId) }
+                                store.recordBatchDecision(selected, ReviewActionType.Delete)
+                            }
+                            refreshLocalState()
+                        }
+                        toast = "当前系统暂不支持回收站请求，已记录删除决策"
+                    } else {
+                        pendingTrashItems = selected
+                        trashLauncher.launch(IntentSenderRequest.Builder(request.intentSender).build())
                     }
                 },
                 onClearDecisions = {
@@ -757,6 +790,7 @@ private fun CollectionsScreen(
     stagedItems: List<StagedItem>,
     onRemoveStaged: (Long) -> Unit,
     onAddStagedToCollection: (List<StagedItem>) -> Unit,
+    onBatchDelete: (List<StagedItem>) -> Unit,
     onClearDecisions: () -> Unit,
     onNavigate: (AppPage) -> Unit
 ) {
@@ -784,6 +818,7 @@ private fun CollectionsScreen(
                     TextButton(onClick = ::clearSelection, enabled = selectedIds.isNotEmpty()) { Text("取消选择") }
                     TextButton(onClick = { onAddStagedToCollection(stagedItems.filter { it.mediaId in selectedIds }); clearSelection() }, enabled = selectedIds.isNotEmpty()) { Text("加入精选") }
                     TextButton(onClick = { selectedIds.toList().forEach(onRemoveStaged); clearSelection() }, enabled = selectedIds.isNotEmpty()) { Text("移除") }
+                    TextButton(onClick = { onBatchDelete(stagedItems.filter { it.mediaId in selectedIds }); clearSelection() }, enabled = selectedIds.isNotEmpty()) { Text("批量删除", color = AppColors.Delete) }
                 }
                 ThumbGrid {
                     stagedItems.forEach {
@@ -837,6 +872,7 @@ private fun CollectionsScreenV2(
     stagedItems: List<StagedItem>,
     onRemoveStaged: (Long) -> Unit,
     onAddStagedToCollection: (List<StagedItem>) -> Unit,
+    onBatchDelete: (List<StagedItem>) -> Unit,
     onClearDecisions: () -> Unit,
     onOpenAlbum: (String, List<StagedItem>, Int) -> Unit,
     onNavigate: (AppPage) -> Unit
@@ -885,6 +921,7 @@ private fun CollectionsScreenV2(
                     TextButton(onClick = ::clearSelection, enabled = selectedIds.isNotEmpty()) { Text("取消选择") }
                     TextButton(onClick = { onAddStagedToCollection(stagedItems.filter { it.mediaId in selectedIds }); clearSelection() }, enabled = selectedIds.isNotEmpty()) { Text("加入精选") }
                     TextButton(onClick = { selectedIds.toList().forEach(onRemoveStaged); clearSelection() }, enabled = selectedIds.isNotEmpty()) { Text("移除") }
+                    TextButton(onClick = { onBatchDelete(stagedItems.filter { it.mediaId in selectedIds }); clearSelection() }, enabled = selectedIds.isNotEmpty()) { Text("批量删除", color = AppColors.Delete) }
                 }
                 ThumbGrid {
                     stagedItems.forEachIndexed { index, item ->

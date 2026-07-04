@@ -42,6 +42,9 @@ interface DecisionRecordDao {
     @Insert
     suspend fun insert(entity: DecisionRecordEntity)
 
+    @Insert
+    suspend fun insertAll(entities: List<DecisionRecordEntity>)
+
     @Query("SELECT * FROM decision_record ORDER BY createdAtMillis ASC")
     suspend fun getAll(): List<DecisionRecordEntity>
 
