@@ -1339,7 +1339,7 @@ private fun PhotoThumb(index: Int, uri: String = "", modifier: Modifier = Modifi
         if (uri.isNotBlank()) {
             AsyncImage(model = uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         } else {
-            Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(1.2f).fillMaxHeight(0.42f).clip(RoundedCornerShape(topStartPercent = 50, topEndPercent = 50)).background(Color.White.copy(alpha = 0.22f)))
+            Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(1.0f).fillMaxHeight(0.42f).clip(RoundedCornerShape(topStartPercent = 50, topEndPercent = 50)).background(Color.White.copy(alpha = 0.22f)))
             Box(modifier = Modifier.align(Alignment.TopEnd).padding(14.dp).size(18.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.58f)))
         }
     }
