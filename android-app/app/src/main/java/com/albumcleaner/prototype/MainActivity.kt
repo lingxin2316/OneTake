@@ -102,6 +102,7 @@ import com.albumcleaner.prototype.data.StoredDecision
 import com.albumcleaner.prototype.data.TrashRepository
 import com.albumcleaner.prototype.data.UserSettings
 import com.albumcleaner.prototype.data.formatSize
+import com.albumcleaner.prototype.ui.theme.themeColors
 import com.albumcleaner.prototype.ui.theme.AlbumCleanerTheme
 import com.albumcleaner.prototype.ui.theme.AppColors
 import kotlinx.coroutines.Dispatchers
@@ -276,7 +277,7 @@ private fun AlbumCleanerApp() {
         if (hasMediaPermission()) loadMedia() else status = LibraryStatus.NeedsPermission
     }
 
-    Surface(color = AppColors.Bg, modifier = Modifier.fillMaxSize()) {
+    Surface(color = themeColors().Bg, modifier = Modifier.fillMaxSize()) {
         when (page) {
             AppPage.Home -> HomeScreen(
                 categories = categories,
@@ -453,7 +454,7 @@ private fun HomeScreen(
         subtitle = statusLabel(status),
         action = {
             IconButton(onClick = { onNavigate(AppPage.Settings) }, modifier = circleButtonModifier()) {
-                Icon(Icons.Outlined.Settings, contentDescription = "设置", tint = AppColors.Ink)
+                Icon(Icons.Outlined.Settings, contentDescription = "设置", tint = themeColors().Ink)
             }
         },
         onNavigate = onNavigate
@@ -505,27 +506,27 @@ private fun PermissionCard(onRequestPermission: () -> Unit) {
 private fun CategoryCard(category: MediaCategory, onOpenGroup: (MediaGroup) -> Unit) {
     var expanded by remember(category.title) { mutableStateOf(category.sourceType == SourceType.Camera) }
     val color = sourceColor(category.sourceType)
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp).fillMaxWidth().shadow(6.dp, RoundedCornerShape(18.dp)).clip(RoundedCornerShape(18.dp)).background(Color.White).border(1.dp, AppColors.Line, RoundedCornerShape(18.dp))) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp).fillMaxWidth().shadow(6.dp, RoundedCornerShape(18.dp)).clip(RoundedCornerShape(18.dp)).background(Color.White).border(1.dp, themeColors().Line, RoundedCornerShape(18.dp))) {
         Row(modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(color.copy(alpha = 0.10f)), contentAlignment = Alignment.Center) {
                 Icon(sourceIcon(category.sourceType), contentDescription = null, tint = color)
             }
             Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-                Text(category.title, fontSize = 15.sp, color = AppColors.Ink, fontWeight = FontWeight.ExtraBold)
-                Text("${category.count} 张 · ${category.sizeLabel}", fontSize = 12.sp, color = AppColors.Muted)
+                Text(category.title, fontSize = 15.sp, color = themeColors().Ink, fontWeight = FontWeight.ExtraBold)
+                Text("${category.count} 张 · ${category.sizeLabel}", fontSize = 12.sp, color = themeColors().Muted)
             }
-            Text(if (expanded) "⌄" else "›", color = AppColors.Subtle, fontSize = 20.sp)
+            Text(if (expanded) "⌄" else "›", color = themeColors().Subtle, fontSize = 20.sp)
         }
         AnimatedVisibility(expanded) {
-            Column(modifier = Modifier.border(1.dp, AppColors.Line.copy(alpha = 0.5f))) {
+            Column(modifier = Modifier.border(1.dp, themeColors().Line.copy(alpha = 0.5f))) {
                 category.groups.forEachIndexed { index, group ->
                     Row(modifier = Modifier.fillMaxWidth().clickable { onOpenGroup(group) }.padding(horizontal = 16.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
                         PhotoThumb(index, group.items.firstOrNull()?.uri.orEmpty(), Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)))
                         Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-                            Text(group.title, color = AppColors.Ink, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("${group.count} 张 · ${group.sizeLabel}", color = AppColors.Subtle, fontSize = 11.sp)
+                            Text(group.title, color = themeColors().Ink, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text("${group.count} 张 · ${group.sizeLabel}", color = themeColors().Subtle, fontSize = 11.sp)
                         }
-                        Text("›", color = AppColors.Subtle, fontSize = 18.sp)
+                        Text("›", color = themeColors().Subtle, fontSize = 18.sp)
                     }
                 }
             }
@@ -599,7 +600,7 @@ private fun CategoryCard(category: MediaCategory, onOpenGroup: (MediaGroup) -> U
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(AppColors.Bg).statusBarsPadding()) {
+    Column(modifier = Modifier.fillMaxSize().background(themeColors().Bg).statusBarsPadding()) {
         ReviewHeader(title, index + 1, items.size, onBack)
         ThumbnailStrip(items, index)
         Box(modifier = Modifier.weight(1f).fillMaxWidth().padding(18.dp), contentAlignment = Alignment.Center) {
@@ -639,8 +640,8 @@ private fun CategoryCard(category: MediaCategory, onOpenGroup: (MediaGroup) -> U
                         }
                     }
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(current.displayName, color = AppColors.Ink, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text("${current.sizeLabel} · ${current.dateLabel}", color = AppColors.Muted, fontSize = 12.sp)
+                        Text(current.displayName, color = themeColors().Ink, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text("${current.sizeLabel} · ${current.dateLabel}", color = themeColors().Muted, fontSize = 12.sp)
                     }
                 }
             }
@@ -655,13 +656,13 @@ private fun CategoryCard(category: MediaCategory, onOpenGroup: (MediaGroup) -> U
             title = { Text("删除会移入系统回收站") },
             text = {
                 Column {
-                    Text("确认后会调用系统回收站，撤回时会从系统回收站恢复。", color = AppColors.Muted)
+                    Text("确认后会调用系统回收站，撤回时会从系统回收站恢复。", color = themeColors().Muted)
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 10.dp)) {
                         Switch(checked = localSkipDeleteTip, onCheckedChange = {
                             localSkipDeleteTip = it
                             onSkipDeleteTipChanged(it)
                         })
-                        Text("不再提醒", color = AppColors.Muted)
+                        Text("不再提醒", color = themeColors().Muted)
                     }
                 }
             },
@@ -680,14 +681,14 @@ private fun CategoryCard(category: MediaCategory, onOpenGroup: (MediaGroup) -> U
 @Composable
 private fun ReviewHeader(title: String, index: Int, total: Int, onBack: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.94f)).padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onBack, modifier = Modifier.size(34.dp).clip(CircleShape).border(1.dp, AppColors.Line, CircleShape)) {
+        IconButton(onClick = onBack, modifier = Modifier.size(34.dp).clip(CircleShape).border(1.dp, themeColors().Line, CircleShape)) {
             Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "返回")
         }
         Column(modifier = Modifier.padding(start = 10.dp).weight(1f)) {
-            Text(title, color = AppColors.Ink, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("$index/$total", color = AppColors.Muted, fontSize = 11.sp)
+            Text(title, color = themeColors().Ink, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("$index/$total", color = themeColors().Muted, fontSize = 11.sp)
         }
-        Text("${(index * 100 / total)}%", color = AppColors.Primary, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.clip(RoundedCornerShape(14.dp)).background(AppColors.PrimarySoft).padding(horizontal = 12.dp, vertical = 7.dp))
+        Text("${(index * 100 / total)}%", color = AppColors.Primary, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.clip(RoundedCornerShape(14.dp)).background(themeColors().PrimarySoft).padding(horizontal = 12.dp, vertical = 7.dp))
     }
 }
 
@@ -704,19 +705,19 @@ private fun ThumbnailStrip(items: List<MediaItem>, currentIndex: Int) {
 
 @Composable
 private fun BoxScope.DirectionHints() {
-    Text("上划删除", color = AppColors.Subtle.copy(alpha = 0.72f), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.align(Alignment.TopCenter).padding(top = 4.dp))
-    Text("下划加入精选集", color = AppColors.Subtle.copy(alpha = 0.72f), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp))
-    Text("跳过", color = AppColors.Subtle.copy(alpha = 0.72f), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.align(Alignment.CenterStart))
-    Text("撤回", color = AppColors.Subtle.copy(alpha = 0.72f), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.align(Alignment.CenterEnd))
+    Text("上划删除", color = themeColors().Subtle.copy(alpha = 0.72f), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.align(Alignment.TopCenter).padding(top = 4.dp))
+    Text("下划加入精选集", color = themeColors().Subtle.copy(alpha = 0.72f), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp))
+    Text("跳过", color = themeColors().Subtle.copy(alpha = 0.72f), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.align(Alignment.CenterStart))
+    Text("撤回", color = themeColors().Subtle.copy(alpha = 0.72f), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.align(Alignment.CenterEnd))
 }
 
 @Composable
 private fun StagingBar(stagedItems: List<StagedItem>, onOpen: () -> Unit, onRemove: (Long) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp).fillMaxWidth().shadow(6.dp, RoundedCornerShape(18.dp)).clip(RoundedCornerShape(18.dp)).background(Color.White).border(1.dp, AppColors.Line, RoundedCornerShape(18.dp))) {
+    Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp).fillMaxWidth().shadow(6.dp, RoundedCornerShape(18.dp)).clip(RoundedCornerShape(18.dp)).background(Color.White).border(1.dp, themeColors().Line, RoundedCornerShape(18.dp))) {
         Row(modifier = Modifier.fillMaxWidth().height(46.dp).clickable { expanded = !expanded }.padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Outlined.Inbox, contentDescription = null, tint = AppColors.Stage, modifier = Modifier.size(18.dp))
-            Text("暂存栏", color = AppColors.Ink, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(start = 6.dp))
+            Text("暂存栏", color = themeColors().Ink, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(start = 6.dp))
             if (stagedItems.isNotEmpty()) Text("${stagedItems.size}", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(start = 6.dp).clip(RoundedCornerShape(999.dp)).background(AppColors.Stage).padding(horizontal = 7.dp, vertical = 2.dp))
             Spacer(Modifier.weight(1f))
             if (expanded) Text("进入筛选", color = AppColors.Primary, fontSize = 11.sp, modifier = Modifier.clickable { onOpen() }.clip(RoundedCornerShape(6.dp)).background(AppColors.Primary.copy(alpha = 0.08f)).padding(horizontal = 8.dp, vertical = 3.dp))
@@ -744,7 +745,7 @@ private fun StagingBar(stagedItems: List<StagedItem>, onOpen: () -> Unit, onRemo
 private fun ReviewActionBar(onDelete: () -> Unit, onSkip: () -> Unit, onFavorite: () -> Unit, onUndo: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 18.dp), horizontalArrangement = Arrangement.Center) {
         ActionCircle(Icons.Outlined.Delete, AppColors.Delete, onDelete)
-        ActionCircle(Icons.AutoMirrored.Outlined.Undo, AppColors.Subtle, onSkip)
+        ActionCircle(Icons.AutoMirrored.Outlined.Undo, themeColors().Subtle, onSkip)
         ActionCircle(Icons.Outlined.Star, AppColors.Favorite, onFavorite)
         ActionCircle(Icons.AutoMirrored.Outlined.Redo, AppColors.Undo, onUndo)
     }
@@ -761,23 +762,23 @@ private fun ActionCircle(icon: ImageVector, color: Color, onClick: () -> Unit) {
 private fun CollectionSheet(onClose: () -> Unit, onPick: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.18f)).clickable { onClose() }, contentAlignment = Alignment.BottomCenter) {
         Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)).background(Color.White).padding(20.dp)) {
-            Box(modifier = Modifier.align(Alignment.CenterHorizontally).width(42.dp).height(4.dp).clip(RoundedCornerShape(999.dp)).background(AppColors.Line))
-            Text("加入精选集", color = AppColors.Ink, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(top = 16.dp))
-            Text("仅在本应用内整理", color = AppColors.Muted, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+            Box(modifier = Modifier.align(Alignment.CenterHorizontally).width(42.dp).height(4.dp).clip(RoundedCornerShape(999.dp)).background(themeColors().Line))
+            Text("加入精选集", color = themeColors().Ink, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(top = 16.dp))
+            Text("仅在本应用内整理", color = themeColors().Muted, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 listOf("精选", "旅行", "家人", "工作").forEachIndexed { index, name ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f).clickable { onPick() }) {
-                        Box(modifier = Modifier.size(52.dp).clip(RoundedCornerShape(18.dp)).background(AppColors.PrimarySoft), contentAlignment = Alignment.Center) {
+                        Box(modifier = Modifier.size(52.dp).clip(RoundedCornerShape(18.dp)).background(themeColors().PrimarySoft), contentAlignment = Alignment.Center) {
                             Icon(if (index == 0) Icons.Outlined.Star else Icons.Outlined.Image, contentDescription = null, tint = AppColors.Primary)
                         }
-                        Text(name, color = AppColors.Ink, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
+                        Text(name, color = themeColors().Ink, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
                     }
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-                    Box(modifier = Modifier.size(52.dp).clip(RoundedCornerShape(18.dp)).background(AppColors.StageSoft), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.size(52.dp).clip(RoundedCornerShape(18.dp)).background(themeColors().StageSoft), contentAlignment = Alignment.Center) {
                         Icon(Icons.Outlined.Add, contentDescription = null, tint = AppColors.Stage)
                     }
-                    Text("新建", color = AppColors.Ink, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
+                    Text("新建", color = themeColors().Ink, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
                 }
             }
         }
@@ -1038,14 +1039,14 @@ private fun AlbumViewerScreen(
 
 @Composable
 private fun PublishPreviewScreen(items: List<StagedItem>, onBack: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().background(AppColors.Bg).statusBarsPadding()) {
+    Column(modifier = Modifier.fillMaxSize().background(themeColors().Bg).statusBarsPadding()) {
         Row(modifier = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 10.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "返回", tint = AppColors.Ink)
+                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "返回", tint = themeColors().Ink)
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text("发布预览", color = AppColors.Ink, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-                Text("${items.size} 张照片 · 自动排版", color = AppColors.Muted, fontSize = 12.sp)
+                Text("发布预览", color = themeColors().Ink, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                Text("${items.size} 张照片 · 自动排版", color = themeColors().Muted, fontSize = 12.sp)
             }
         }
         Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -1058,7 +1059,7 @@ private fun PublishPreviewScreen(items: List<StagedItem>, onBack: () -> Unit) {
 @Composable
 private fun PublishCollage(items: List<StagedItem>) {
     val visibleItems = items.take(9)
-    Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color.White).border(1.dp, AppColors.Line, RoundedCornerShape(18.dp)).padding(12.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color.White).border(1.dp, themeColors().Line, RoundedCornerShape(18.dp)).padding(12.dp)) {
         if (visibleItems.isEmpty()) {
             EmptyCollectionText("还没有可预览的照片")
             return@Column
@@ -1173,8 +1174,8 @@ private fun SharePreviewDialog(stagedItems: List<StagedItem>, onClose: () -> Uni
                 .background(Color.White)
                 .padding(18.dp)
         ) {
-            Text("发布预览", color = AppColors.Ink, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
-            Text("暂存照片精选拼图", color = AppColors.Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
+            Text("发布预览", color = themeColors().Ink, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+            Text("暂存照片精选拼图", color = themeColors().Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                 stagedItems.take(6).forEachIndexed { index, item ->
                     PhotoThumb(
@@ -1186,7 +1187,7 @@ private fun SharePreviewDialog(stagedItems: List<StagedItem>, onClose: () -> Uni
                     )
                 }
             }
-            Text("共 ${stagedItems.size} 张，可用于朋友圈/小红书发布前预览。", color = AppColors.Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 14.dp))
+            Text("共 ${stagedItems.size} 张，可用于朋友圈/小红书发布前预览。", color = themeColors().Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 14.dp))
             TextButton(onClick = onClose, modifier = Modifier.align(Alignment.End).padding(top = 8.dp)) { Text("关闭") }
         }
     }
@@ -1217,13 +1218,13 @@ private fun RecentActionsScreen(
 
 @Composable
 private fun RecentActionRow(item: StoredDecision, paletteIndex: Int) {
-    Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(AppColors.Bg).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(themeColors().Bg).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
         PhotoThumb(paletteIndex, item.uri, Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)))
         Column(modifier = Modifier.padding(start = 10.dp).weight(1f)) {
-            Text(actionName(item.action), color = AppColors.Ink, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
-            Text(item.displayName.ifBlank { "媒体 #${item.mediaId}" }, color = AppColors.Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(actionName(item.action), color = themeColors().Ink, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
+            Text(item.displayName.ifBlank { "媒体 #${item.mediaId}" }, color = themeColors().Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        Text("#${item.id}", color = AppColors.Subtle, fontSize = 11.sp)
+        Text("#${item.id}", color = themeColors().Subtle, fontSize = 11.sp)
     }
 }
 
@@ -1238,7 +1239,7 @@ private fun SettingsScreen(
     onNavigate: (AppPage) -> Unit
 ) {
     ScreenScaffold(AppPage.Settings, "设置", "偏好与数据", onNavigate = onNavigate) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color.White).border(1.dp, AppColors.Line, RoundedCornerShape(18.dp))) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color.White).border(1.dp, themeColors().Line, RoundedCornerShape(18.dp))) {
             SettingsRow("显示辅助操作栏", "默认关闭，打开后卡片页底部显示按钮", actionBarEnabled, onToggleActionBar)
             SettingsRow("删除前轻提示", "首次删除时提醒，可勾选不再提醒", true, {})
             SettingsRow("相册扫描", statusLabel(status), true, onReload)
@@ -1251,8 +1252,8 @@ private fun SettingsScreen(
 private fun SettingsRow(title: String, desc: String, checked: Boolean, onToggle: () -> Unit, actionLabel: String? = null) {
     Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, color = AppColors.Ink, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold)
-            Text(desc, color = AppColors.Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+            Text(title, color = themeColors().Ink, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold)
+            Text(desc, color = themeColors().Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
         }
         if (actionLabel == null) Switch(checked = checked, onCheckedChange = { onToggle() }) else TextButton(onClick = onToggle, enabled = checked) { Text(actionLabel) }
     }
@@ -1266,11 +1267,11 @@ private fun CollectionSection(title: String, subtitle: String, emptyText: String
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
             .background(Color.White)
-            .border(1.dp, AppColors.Line, RoundedCornerShape(18.dp))
+            .border(1.dp, themeColors().Line, RoundedCornerShape(18.dp))
             .padding(14.dp)
     ) {
-        Text(title, color = AppColors.Ink, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
-        Text(subtitle.ifBlank { emptyText }, color = AppColors.Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+        Text(title, color = themeColors().Ink, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
+        Text(subtitle.ifBlank { emptyText }, color = themeColors().Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1284,7 +1285,7 @@ private fun CollectionSection(title: String, subtitle: String, emptyText: String
 
 @Composable
 private fun EmptyCollectionText(text: String) {
-    Text(text, color = AppColors.Subtle, fontSize = 12.sp, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+    Text(text, color = themeColors().Subtle, fontSize = 12.sp, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
 }
 
 @Composable
@@ -1301,16 +1302,16 @@ private fun CollectionThumb(title: String, uri: String, paletteIndex: Int, selec
                 Text("✓", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
             }
         }
-        Text(title, color = AppColors.Ink, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp))
+        Text(title, color = themeColors().Ink, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp))
         if (actionLabel != null) TextButton(onClick = onAction, modifier = Modifier.height(30.dp)) { Text(actionLabel, fontSize = 11.sp) }
     }
 }
 
 @Composable
 private fun InfoCard(title: String, desc: String) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color.White).border(1.dp, AppColors.Line, RoundedCornerShape(18.dp)).padding(16.dp)) {
-        Text(title, color = AppColors.Ink, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
-        Text(desc, color = AppColors.Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color.White).border(1.dp, themeColors().Line, RoundedCornerShape(18.dp)).padding(16.dp)) {
+        Text(title, color = themeColors().Ink, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
+        Text(desc, color = themeColors().Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
     }
 }
 
@@ -1323,11 +1324,11 @@ private fun ScreenScaffold(
     onNavigate: (AppPage) -> Unit,
     content: @Composable () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize().background(AppColors.Bg).statusBarsPadding()) {
+    Column(modifier = Modifier.fillMaxSize().background(themeColors().Bg).statusBarsPadding()) {
         Row(modifier = Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.94f)).padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(subtitle, color = AppColors.Muted, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Text(title, color = AppColors.Ink, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                Text(subtitle, color = themeColors().Muted, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(title, color = themeColors().Ink, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
             }
             action?.invoke()
         }
@@ -1341,7 +1342,7 @@ private fun ScreenScaffold(
 @Composable
 private fun BottomNav(active: AppPage, onNavigate: (AppPage) -> Unit) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-        Row(modifier = Modifier.fillMaxWidth().navigationBarsPadding().height(64.dp).background(Color.White.copy(alpha = 0.96f)).border(1.dp, AppColors.Line), horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.fillMaxWidth().navigationBarsPadding().height(64.dp).background(Color.White.copy(alpha = 0.96f)).border(1.dp, themeColors().Line), horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically) {
             NavItem(Icons.Outlined.Home, "首页", active == AppPage.Home) { onNavigate(AppPage.Home) }
             NavItem(Icons.Outlined.Star, "精选集", active == AppPage.Collections) { onNavigate(AppPage.Collections) }
             NavItem(Icons.Outlined.BarChart, "最近", active == AppPage.Stats) { onNavigate(AppPage.Stats) }
@@ -1353,10 +1354,10 @@ private fun BottomNav(active: AppPage, onNavigate: (AppPage) -> Unit) {
 @Composable
 private fun NavItem(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
     Column(modifier = Modifier.clickable { onClick() }.widthIn(min = 68.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(modifier = Modifier.width(34.dp).height(28.dp).clip(RoundedCornerShape(16.dp)).background(if (selected) AppColors.PrimarySoft else Color.Transparent), contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = label, tint = if (selected) AppColors.Primary else AppColors.Subtle, modifier = Modifier.size(19.dp))
+        Box(modifier = Modifier.width(34.dp).height(28.dp).clip(RoundedCornerShape(16.dp)).background(if (selected) themeColors().PrimarySoft else Color.Transparent), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = label, tint = if (selected) AppColors.Primary else themeColors().Subtle, modifier = Modifier.size(19.dp))
         }
-        Text(label, color = if (selected) AppColors.Primary else AppColors.Subtle, fontSize = 10.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
+        Text(label, color = if (selected) AppColors.Primary else themeColors().Subtle, fontSize = 10.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
     }
 }
 
@@ -1389,7 +1390,8 @@ private fun ToastOverlay(message: String, bottom: Int = 86) {
     }
 }
 
-private fun circleButtonModifier(): Modifier = Modifier.size(38.dp).shadow(2.dp, CircleShape).clip(CircleShape).background(Color.White).border(1.dp, AppColors.Line, CircleShape)
+@Composable
+private fun circleButtonModifier(): Modifier = Modifier.size(38.dp).shadow(2.dp, CircleShape).clip(CircleShape).background(themeColors().Card).border(1.dp, themeColors().Line, CircleShape)
 
 private fun mediaPermission(): String = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE
 
