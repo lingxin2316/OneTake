@@ -14,6 +14,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -88,6 +89,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
+import com.albumcleaner.prototype.data.CollectionFolder
 import com.albumcleaner.prototype.data.DecisionStore
 import com.albumcleaner.prototype.data.FakeAlbumData
 import com.albumcleaner.prototype.data.MediaCategory
@@ -100,6 +102,7 @@ import com.albumcleaner.prototype.data.SourceType
 import com.albumcleaner.prototype.data.StagedItem
 import com.albumcleaner.prototype.data.StoredDecision
 import com.albumcleaner.prototype.data.TrashRepository
+import com.albumcleaner.prototype.data.GestureDetector
 import com.albumcleaner.prototype.data.UserSettings
 import com.albumcleaner.prototype.data.formatSize
 import com.albumcleaner.prototype.ui.theme.themeColors
@@ -118,7 +121,7 @@ private enum class LibraryStatus { Checking, NeedsPermission, Loading, Ready, Em
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { AlbumCleanerTheme { AlbumCleanerApp() } }
+        setContent { AlbumCleanerApp() }
     }
 }
 
@@ -129,11 +132,19 @@ private fun AlbumCleanerApp() {
     val store = remember { DecisionStore(context) }
     val trash = remember { TrashRepository(context) }
     val stagedItems = remember { mutableStateListOf<StagedItem>() }
+    val collections = remember { mutableStateListOf<CollectionFolder>() }
 
     var page by remember { mutableStateOf(AppPage.Home) }
     var status by remember { mutableStateOf(LibraryStatus.Checking) }
     var actionBarEnabled by remember { mutableStateOf(false) }
     var skipDeleteTip by remember { mutableStateOf(false) }
+    var darkMode by remember { mutableStateOf("system") }
+    val isSystemDark = isSystemInDarkTheme()
+    val useDarkTheme = when (darkMode) {
+        "light" -> false
+        "dark" -> true
+        else -> isSystemDark
+    }
     var categories by remember { mutableStateOf(FakeAlbumData.categories) }
     var activeItems by remember { mutableStateOf(FakeAlbumData.reviewItems) }
     var activeGroupTitle by remember { mutableStateOf("2026-06-20 毕业典礼") }
@@ -149,6 +160,8 @@ private fun AlbumCleanerApp() {
     var pendingRestoreDecision by remember { mutableStateOf<StoredDecision?>(null) }
     var localDeleteSignal by remember { mutableStateOf<Long?>(null) }
     var toast by remember { mutableStateOf<String?>(null) }
+    var showCollectionSheet by remember { mutableStateOf(false) }
+    var pendingCollectionItems by remember { mutableStateOf<List<StagedItem>>(emptyList()) }
 
     suspend fun refreshLocalState() {
         decisions = withContext(Dispatchers.IO) { store.all() }
@@ -157,18 +170,22 @@ private fun AlbumCleanerApp() {
         val restored = withContext(Dispatchers.IO) { store.stagedItems() }
         stagedItems.clear()
         stagedItems.addAll(restored)
+        val loadedCollections = withContext(Dispatchers.IO) { store.getAllCollections() }
+        collections.clear()
+        collections.addAll(loadedCollections)
     }
 
     suspend fun loadSettings() {
         val settings = withContext(Dispatchers.IO) { store.getSettings() }
         actionBarEnabled = settings.actionBarEnabled
         skipDeleteTip = settings.skipDeleteTip
+        darkMode = settings.darkMode
     }
 
     fun saveSettings() {
         scope.launch {
             withContext(Dispatchers.IO) {
-                store.saveSettings(UserSettings(actionBarEnabled, skipDeleteTip))
+                store.saveSettings(UserSettings(actionBarEnabled, skipDeleteTip, darkMode))
             }
         }
     }
@@ -277,8 +294,10 @@ private fun AlbumCleanerApp() {
         if (hasMediaPermission()) loadMedia() else status = LibraryStatus.NeedsPermission
     }
 
-    Surface(color = themeColors().Bg, modifier = Modifier.fillMaxSize()) {
-        when (page) {
+    AlbumCleanerTheme(darkTheme = useDarkTheme) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Surface(color = themeColors().Bg, modifier = Modifier.fillMaxSize()) {
+                when (page) {
             AppPage.Home -> HomeScreen(
                 categories = categories,
                 status = status,
@@ -342,6 +361,7 @@ private fun AlbumCleanerApp() {
                 }
             )
             AppPage.Collections -> CollectionsScreenV2(
+                collections = collections,
                 decisions = decisions,
                 stagedItems = stagedItems,
                 onRemoveStaged = { id ->
@@ -352,9 +372,23 @@ private fun AlbumCleanerApp() {
                     }
                 },
                 onAddStagedToCollection = { selected ->
+                    pendingCollectionItems = selected
+                    showCollectionSheet = true
+                },
+                onOpenCollection = { folder ->
                     scope.launch {
-                        withContext(Dispatchers.IO) { store.addStagedToCollection(selected) }
+                        val items = withContext(Dispatchers.IO) { store.getCollectionItemsAsStaged(folder.id) }
+                        viewerTitle = folder.name
+                        viewerItems = items
+                        viewerStartIndex = 0
+                        page = AppPage.AlbumViewer
+                    }
+                },
+                onCreateCollection = { name ->
+                    scope.launch {
+                        withContext(Dispatchers.IO) { store.createCollection(name) }
                         refreshLocalState()
+                        toast = "已创建精选集"
                     }
                 },
                 onBatchDelete = { selected ->
@@ -415,8 +449,13 @@ private fun AlbumCleanerApp() {
                 status = status,
                 decisionCount = decisionCount,
                 actionBarEnabled = actionBarEnabled,
+                darkMode = darkMode,
                 onToggleActionBar = {
                     actionBarEnabled = !actionBarEnabled
+                    saveSettings()
+                },
+                onChangeDarkMode = { mode ->
+                    darkMode = mode
                     saveSettings()
                 },
                 onReload = { if (hasMediaPermission()) loadMedia() else permissionLauncher.launch(mediaPermission()) },
@@ -431,12 +470,42 @@ private fun AlbumCleanerApp() {
         }
     }
 
+    if (showCollectionSheet) {
+        CollectionSheet(
+            collections = collections,
+            onClose = { showCollectionSheet = false },
+            onPick = { collectionId ->
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        store.addStagedToCollection(pendingCollectionItems, collectionId)
+                    }
+                    refreshLocalState()
+                    toast = "已加入精选集"
+                }
+                showCollectionSheet = false
+            },
+            onCreate = { name ->
+                scope.launch {
+                    val newId = withContext(Dispatchers.IO) { store.createCollection(name) }
+                    withContext(Dispatchers.IO) {
+                        store.addStagedToCollection(pendingCollectionItems, newId)
+                    }
+                    refreshLocalState()
+                    toast = "已创建并加入精选集"
+                }
+                showCollectionSheet = false
+            }
+        )
+    }
+
     toast?.let { message ->
         LaunchedEffect(message) {
             delay(1600)
             toast = null
         }
         ToastOverlay(message)
+        }
+        }
     }
 }
 
@@ -608,7 +677,7 @@ private fun CategoryCard(category: MediaCategory, onOpenGroup: (MediaGroup) -> U
             Box(modifier = Modifier.fillMaxWidth(0.82f).fillMaxHeight(0.76f).offset { IntOffset(dragOffsetX.roundToInt(), dragOffsetY.roundToInt()) }.shadow(12.dp, RoundedCornerShape(26.dp)).clip(RoundedCornerShape(26.dp)).background(Color.White).pointerInput(index) {
                 detectDragGestures(
                     onDragEnd = {
-                        val action = detectAction(Offset(dragOffsetX, dragOffsetY))
+                        val action = GestureDetector.detectAction(Offset(dragOffsetX, dragOffsetY))
                         dragOffsetX = 0f
                         dragOffsetY = 0f
                         when (action) {
@@ -672,7 +741,8 @@ private fun CategoryCard(category: MediaCategory, onOpenGroup: (MediaGroup) -> U
     }
 
     if (showCollections) {
-        CollectionSheet(onClose = { showCollections = false }, onPick = { showCollections = false; advance(ReviewActionType.AddToCollection) })
+        advance(ReviewActionType.AddToCollection)
+        showCollections = false
     }
 
     toast?.let { ToastOverlay(it, if (actionBarEnabled) 84 else 30) }
@@ -759,22 +829,41 @@ private fun ActionCircle(icon: ImageVector, color: Color, onClick: () -> Unit) {
 }
 
 @Composable
-private fun CollectionSheet(onClose: () -> Unit, onPick: () -> Unit) {
+private fun CollectionSheet(
+    collections: List<CollectionFolder>,
+    onClose: () -> Unit,
+    onPick: (Long) -> Unit,
+    onCreate: (String) -> Unit
+) {
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var newCollectionName by remember { mutableStateOf("") }
+
     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.18f)).clickable { onClose() }, contentAlignment = Alignment.BottomCenter) {
         Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)).background(Color.White).padding(20.dp)) {
             Box(modifier = Modifier.align(Alignment.CenterHorizontally).width(42.dp).height(4.dp).clip(RoundedCornerShape(999.dp)).background(themeColors().Line))
             Text("加入精选集", color = themeColors().Ink, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(top = 16.dp))
             Text("仅在本应用内整理", color = themeColors().Muted, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                listOf("精选", "旅行", "家人", "工作").forEachIndexed { index, name ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f).clickable { onPick() }) {
-                        Box(modifier = Modifier.size(52.dp).clip(RoundedCornerShape(18.dp)).background(themeColors().PrimarySoft), contentAlignment = Alignment.Center) {
-                            Icon(if (index == 0) Icons.Outlined.Star else Icons.Outlined.Image, contentDescription = null, tint = AppColors.Primary)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                if (collections.isEmpty()) {
+                    listOf("精选集").forEachIndexed { index, name ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(56.dp).clickable { showCreateDialog = true }) {
+                            Box(modifier = Modifier.size(52.dp).clip(RoundedCornerShape(18.dp)).background(themeColors().PrimarySoft), contentAlignment = Alignment.Center) {
+                                Icon(if (index == 0) Icons.Outlined.Star else Icons.Outlined.Image, contentDescription = null, tint = AppColors.Primary)
+                            }
+                            Text(name, color = themeColors().Ink, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp).fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         }
-                        Text(name, color = themeColors().Ink, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
+                    }
+                } else {
+                    collections.take(6).forEach { folder ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(56.dp).clickable { onPick(folder.id) }) {
+                            Box(modifier = Modifier.size(52.dp).clip(RoundedCornerShape(18.dp)).background(themeColors().PrimarySoft), contentAlignment = Alignment.Center) {
+                                Icon(if (folder.isDefault) Icons.Outlined.Star else Icons.Outlined.Image, contentDescription = null, tint = AppColors.Primary)
+                            }
+                            Text(folder.name, color = themeColors().Ink, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp).fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        }
                     }
                 }
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(56.dp).clickable { showCreateDialog = true }) {
                     Box(modifier = Modifier.size(52.dp).clip(RoundedCornerShape(18.dp)).background(themeColors().StageSoft), contentAlignment = Alignment.Center) {
                         Icon(Icons.Outlined.Add, contentDescription = null, tint = AppColors.Stage)
                     }
@@ -782,6 +871,37 @@ private fun CollectionSheet(onClose: () -> Unit, onPick: () -> Unit) {
                 }
             }
         }
+    }
+
+    if (showCreateDialog) {
+        AlertDialog(
+            onDismissRequest = { showCreateDialog = false },
+            title = { Text("新建精选集") },
+            text = {
+                androidx.compose.material3.OutlinedTextField(
+                    value = newCollectionName,
+                    onValueChange = { newCollectionName = it },
+                    label = { Text("名称") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newCollectionName.isNotBlank()) {
+                            onCreate(newCollectionName.trim())
+                            newCollectionName = ""
+                            showCreateDialog = false
+                        }
+                    },
+                    enabled = newCollectionName.isNotBlank()
+                ) { Text("创建") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCreateDialog = false; newCollectionName = "" }) { Text("取消") }
+            }
+        )
     }
 }
 
@@ -869,6 +989,7 @@ private fun CollectionsScreen(
 
 @Composable
 private fun CollectionsScreenV2(
+    collections: List<CollectionFolder>,
     decisions: List<StoredDecision>,
     stagedItems: List<StagedItem>,
     onRemoveStaged: (Long) -> Unit,
@@ -876,12 +997,13 @@ private fun CollectionsScreenV2(
     onBatchDelete: (List<StagedItem>) -> Unit,
     onClearDecisions: () -> Unit,
     onOpenAlbum: (String, List<StagedItem>, Int) -> Unit,
+    onOpenCollection: (CollectionFolder) -> Unit,
+    onCreateCollection: (String) -> Unit,
     onNavigate: (AppPage) -> Unit
 ) {
     val selectedIds = remember { mutableStateListOf<Long>() }
     val favorites = decisions.filter { it.action == ReviewActionType.AddToCollection }.asReversed()
     val stagedHistory = decisions.filter { it.action == ReviewActionType.Stage }.asReversed()
-    val favoriteItems = favorites.mapIndexed { index, item -> item.toStagedItem(index) }.distinctBy { it.mediaId }
     fun toggle(id: Long) { if (id in selectedIds) selectedIds.remove(id) else selectedIds.add(id) }
     fun clearSelection() = selectedIds.clear()
 
@@ -892,22 +1014,40 @@ private fun CollectionsScreenV2(
         action = { TextButton(onClick = onClearDecisions, enabled = decisions.isNotEmpty()) { Text("清空记录") } },
         onNavigate = onNavigate
     ) {
-        CollectionSection("精选相册", "${favoriteItems.size} 张已收藏", "还没有加入精选的照片") {
-            if (favoriteItems.isEmpty()) {
-                EmptyCollectionText("还没有加入精选的照片")
+        CollectionSection("我的精选集", if (collections.isEmpty()) "还没有精选集" else "${collections.size} 个精选集", "点击新建精选集开始整理") {
+            if (collections.isEmpty()) {
+                EmptyCollectionText("还没有精选集")
+                Button(onClick = { onCreateCollection("精选集") }) { Text("新建精选集") }
             } else {
-                Button(onClick = { onOpenAlbum("精选相册", favoriteItems, 0) }) { Text("打开相册") }
-                ThumbGrid {
-                    favoriteItems.take(36).forEachIndexed { index, item ->
-                        CollectionThumb(
-                            title = item.displayName.ifBlank { "精选 #${item.mediaId}" },
-                            uri = item.uri,
-                            paletteIndex = item.paletteIndex,
-                            selected = false,
-                            actionLabel = null,
-                            onClick = { onOpenAlbum("精选相册", favoriteItems, index) },
-                            onAction = {}
-                        )
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    collections.chunked(2).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            row.forEach { folder ->
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(96.dp)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(themeColors().PrimarySoft)
+                                        .clickable { onOpenCollection(folder) }
+                                        .padding(12.dp)
+                                ) {
+                                    Column(modifier = Modifier.align(Alignment.BottomStart)) {
+                                        Text(folder.name, color = themeColors().Ink, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                        Text("${folder.itemCount} 张", color = themeColors().Muted, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                    }
+                                    Icon(
+                                        if (folder.isDefault) Icons.Outlined.Star else Icons.Outlined.Image,
+                                        contentDescription = null,
+                                        tint = AppColors.Primary,
+                                        modifier = Modifier.size(22.dp).align(Alignment.TopEnd)
+                                    )
+                                }
+                            }
+                            if (row.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             }
@@ -1233,7 +1373,9 @@ private fun SettingsScreen(
     status: LibraryStatus,
     decisionCount: Int,
     actionBarEnabled: Boolean,
+    darkMode: String,
     onToggleActionBar: () -> Unit,
+    onChangeDarkMode: (String) -> Unit,
     onReload: () -> Unit,
     onClearDecisions: () -> Unit,
     onNavigate: (AppPage) -> Unit
@@ -1241,6 +1383,7 @@ private fun SettingsScreen(
     ScreenScaffold(AppPage.Settings, "设置", "偏好与数据", onNavigate = onNavigate) {
         Column(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color.White).border(1.dp, themeColors().Line, RoundedCornerShape(18.dp))) {
             SettingsRow("显示辅助操作栏", "默认关闭，打开后卡片页底部显示按钮", actionBarEnabled, onToggleActionBar)
+            DarkModeSettingsRow(darkMode, onChangeDarkMode)
             SettingsRow("删除前轻提示", "首次删除时提醒，可勾选不再提醒", true, {})
             SettingsRow("相册扫描", statusLabel(status), true, onReload)
             SettingsRow("本地决策记录", "已记录 $decisionCount 次操作", decisionCount > 0, onClearDecisions, actionLabel = "清空")
@@ -1256,6 +1399,31 @@ private fun SettingsRow(title: String, desc: String, checked: Boolean, onToggle:
             Text(desc, color = themeColors().Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
         }
         if (actionLabel == null) Switch(checked = checked, onCheckedChange = { onToggle() }) else TextButton(onClick = onToggle, enabled = checked) { Text(actionLabel) }
+    }
+}
+
+@Composable
+private fun DarkModeSettingsRow(darkMode: String, onChange: (String) -> Unit) {
+    val options = listOf("system" to "跟随系统", "light" to "浅色", "dark" to "深色")
+    Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text("深色主题", color = themeColors().Ink, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold)
+            Text("选择显示模式", color = themeColors().Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            options.forEach { (value, label) ->
+                val selected = darkMode == value
+                TextButton(
+                    onClick = { onChange(value) },
+                    modifier = Modifier.height(32.dp).then(
+                        if (selected) Modifier.background(themeColors().PrimarySoft, RoundedCornerShape(8.dp))
+                        else Modifier
+                    )
+                ) {
+                    Text(label, fontSize = 12.sp, color = if (selected) AppColors.Primary else themeColors().Muted)
+                }
+            }
+        }
     }
 }
 
@@ -1407,14 +1575,7 @@ private fun sourceColor(type: SourceType): Color = when (type) {
     SourceType.Download -> Color(0xFF0F766E)
 }
 
-private fun detectAction(offset: Offset): ReviewActionType? {
-    if (maxOf(abs(offset.x), abs(offset.y)) < 60f) return null
-    return if (abs(offset.x) > abs(offset.y)) {
-        if (offset.x > 0) ReviewActionType.Undo else ReviewActionType.Skip
-    } else {
-        if (offset.y > 0) ReviewActionType.AddToCollection else ReviewActionType.Delete
-    }
-}
+
 
 private fun actionName(type: ReviewActionType): String = when (type) {
     ReviewActionType.Delete -> "删除"

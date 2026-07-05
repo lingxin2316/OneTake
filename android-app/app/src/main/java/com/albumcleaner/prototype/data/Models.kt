@@ -42,6 +42,32 @@ data class StagedItem(
     val displayName: String = ""
 )
 
+data class CollectionFolder(
+    val id: Long,
+    val name: String,
+    val iconRes: String = "star",
+    val coverUri: String = "",
+    val itemCount: Int = 0,
+    val isDefault: Boolean = false,
+    val createdAtMillis: Long,
+    val updatedAtMillis: Long
+)
+
+data class CollectionItem(
+    val collectionId: Long,
+    val mediaId: Long,
+    val displayName: String,
+    val uri: String,
+    val addedAtMillis: Long
+) {
+    fun toStagedItem(paletteIndex: Int): StagedItem = StagedItem(
+        mediaId = mediaId,
+        paletteIndex = paletteIndex,
+        uri = uri,
+        displayName = displayName
+    )
+}
+
 enum class ReviewActionType {
     Delete,
     Skip,

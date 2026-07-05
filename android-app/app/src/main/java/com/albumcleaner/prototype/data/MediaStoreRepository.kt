@@ -118,25 +118,40 @@ class MediaStoreRepository(private val context: Context) {
         }
     }
 
-    private fun groupKey(sourceType: SourceType, item: MediaItem): String {
-        return when (sourceType) {
-            SourceType.Camera -> "${item.dateLabel.take(7).ifBlank { "未知月份" }} 相机拍摄"
-            SourceType.Screenshot -> sourceFolder(item.relativePath).ifBlank { "截图" }
-            SourceType.Download -> sourceFolder(item.relativePath).ifBlank { "下载图片" }
+
+
+    internal fun sourceFolder(relativePath: String): String {
+        return MediaStoreRepository.sourceFolder(relativePath)
+    }
+
+    internal fun inferSourceType(relativePath: String, displayName: String): SourceType {
+        return MediaStoreRepository.inferSourceType(relativePath, displayName)
+    }
+
+    companion object {
+        const val MIN_GROUP_SIZE = 8
+        const val MAX_GROUP_COUNT = 12
+
+        fun inferSourceType(relativePath: String, displayName: String): SourceType {
+            val marker = "${relativePath.lowercase(Locale.US)} ${displayName.lowercase(Locale.US)}"
+            return when {
+                "screenshot" in marker || "screenshots" in marker || "screen_shot" in marker -> SourceType.Screenshot
+                "download" in marker || "downloads" in marker -> SourceType.Download
+                else -> SourceType.Camera
+            }
         }
-    }
 
-    private fun sourceFolder(relativePath: String): String {
-        val parts = relativePath.trim('/').split('/').filter { it.isNotBlank() }
-        return parts.takeLast(2).joinToString(" / ")
-    }
+        fun sourceFolder(relativePath: String): String {
+            val parts = relativePath.trim('/').split('/').filter { it.isNotBlank() }
+            return parts.takeLast(2).joinToString(" / ")
+        }
 
-    private fun inferSourceType(relativePath: String, displayName: String): SourceType {
-        val marker = "${relativePath.lowercase(Locale.US)} ${displayName.lowercase(Locale.US)}"
-        return when {
-            "screenshot" in marker || "screenshots" in marker || "screen_shot" in marker -> SourceType.Screenshot
-            "download" in marker || "downloads" in marker -> SourceType.Download
-            else -> SourceType.Camera
+        fun groupKey(sourceType: SourceType, item: MediaItem): String {
+            return when (sourceType) {
+                SourceType.Camera -> "${item.dateLabel.take(7).ifBlank { "未知月份" }} 相机拍摄"
+                SourceType.Screenshot -> sourceFolder(item.relativePath).ifBlank { "截图" }
+                SourceType.Download -> sourceFolder(item.relativePath).ifBlank { "下载图片" }
+            }
         }
     }
 
@@ -150,11 +165,6 @@ class MediaStoreRepository(private val context: Context) {
         override val key: String,
         override val value: List<MediaItem>
     ) : Map.Entry<String, List<MediaItem>>
-
-    private companion object {
-        const val MIN_GROUP_SIZE = 8
-        const val MAX_GROUP_COUNT = 12
-    }
 }
 
 fun formatSize(bytes: Long): String {
